@@ -4,6 +4,8 @@
 	import ChromeSidebar from '$components/ChromeSidebar.svelte';
 	import EnsureAuthorInfo from '$components/EnsureAuthorInfo.svelte';
 	import ReduxResult from '$components/ReduxResult.svelte';
+	import { DefinedFocusable } from '$lib/focus/focusManager';
+	import { focusable } from '$lib/focus/focusable.svelte';
 	import { PROJECTS_SERVICE } from '$lib/project/projectsService';
 	import { inject } from '@gitbutler/shared/context';
 	import type { Snippet } from 'svelte';
@@ -20,7 +22,7 @@
 
 <ReduxResult {projectId} result={projectResult.current}>
 	{#snippet children(project, { projectId })}
-		<div class="chrome">
+		<div class="chrome" use:focusable>
 			<ChromeHeader {projectId} projectTitle={project.title} actionsDisabled={sidebarDisabled} />
 			<div class="chrome-body">
 				<EnsureAuthorInfo {projectId} />

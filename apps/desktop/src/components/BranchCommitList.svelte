@@ -26,6 +26,7 @@
 		ReorderCommitDzFactory,
 		ReorderCommitDzHandler
 	} from '$lib/dragging/stackingReorderDropzoneManager';
+	import { focusable } from '$lib/focus/focusable.svelte';
 	import { DEFAULT_FORGE_FACTORY } from '$lib/forge/forgeFactory.svelte';
 	import { HOOKS_SERVICE } from '$lib/hooks/hooksService';
 	import { STACK_SERVICE, type SeriesIntegrationStrategy } from '$lib/stacks/stackService.svelte';
@@ -242,7 +243,15 @@
 		{@render commitReorderDz(stackingReorderDropzoneManager.top(branchName))}
 
 		{#if hasCommits || hasRemoteCommits}
-			<div class="commit-list hide-when-empty">
+			<div
+				class="commit-list hide-when-empty"
+				use:focusable={{
+					list: true,
+					onKeydown: (e, param) => {
+						console.log('key down2', e, param);
+					}
+				}}
+			>
 				{#if hasRemoteCommits}
 					<CommitsAccordion
 						testId={TestId.UpstreamCommitsAccordion}

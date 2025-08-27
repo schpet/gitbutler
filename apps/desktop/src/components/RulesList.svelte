@@ -3,6 +3,8 @@
 	import ReduxResult from '$components/ReduxResult.svelte';
 	import Rule from '$components/Rule.svelte';
 	import RuleFiltersEditor from '$components/RuleFiltersEditor.svelte';
+	import { DefinedFocusable } from '$lib/focus/focusManager';
+	import { focusable } from '$lib/focus/focusable.svelte';
 	import {
 		type WorkspaceRuleId,
 		type RuleFilterMap,
@@ -199,7 +201,7 @@
 	}
 </script>
 
-<div class="rules-list">
+<div class="rules-list" use:focusable>
 	<div class="rules-list__header">
 		<div class="rules-list__title">
 			{@render foldButton()}

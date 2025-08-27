@@ -25,7 +25,7 @@ the window, then enlarge it and retain the original widths of the layout.
 -->
 <script lang="ts">
 	import Resizer from '$components/Resizer.svelte';
-	import { DefinedFocusable } from '$lib/focus/focusManager.svelte';
+	import { DefinedFocusable } from '$lib/focus/focusManager';
 	import { focusable } from '$lib/focus/focusable.svelte';
 	import { SETTINGS } from '$lib/settings/userSettings';
 	import { UI_STATE } from '$lib/state/uiState.svelte';
@@ -131,7 +131,7 @@ the window, then enlarge it and retain the original widths of the layout.
 
 <div
 	class="main-viewport"
-	use:focusable={{ id: DefinedFocusable.MainViewport }}
+	use:focusable
 	bind:clientWidth={containerBindWidth}
 	data-testid={testId}
 	class:left-sideview-open={!!preview}
@@ -142,10 +142,7 @@ the window, then enlarge it and retain the original widths of the layout.
 			bind:this={leftDiv}
 			style:width={finalLeftWidth + 'rem'}
 			style:min-width={leftMinWidth + 'rem'}
-			use:focusable={{
-				id: DefinedFocusable.ViewportLeft,
-				parentId: DefinedFocusable.MainViewport
-			}}
+			use:focusable={{ list: true }}
 		>
 			<div class="left-section__content">
 				{@render left()}
@@ -169,10 +166,7 @@ the window, then enlarge it and retain the original widths of the layout.
 				bind:this={previewDiv}
 				style:width={finalPreviewWidth + 'rem'}
 				style:min-width={previewMinWidth + 'rem'}
-				use:focusable={{
-					id: DefinedFocusable.ViewportMiddle,
-					parentId: DefinedFocusable.MainViewport
-				}}
+				use:focusable
 			>
 				<div class="left-sideview-content dotted-pattern">
 					{@render preview()}
@@ -200,10 +194,7 @@ the window, then enlarge it and retain the original widths of the layout.
 		class="main-section view-wrapper dotted-pattern"
 		style:min-width={middleMinWidth + 'rem'}
 		style:margin-right={right ? '0' : ''}
-		use:focusable={{
-			id: DefinedFocusable.ViewportMiddle,
-			parentId: DefinedFocusable.MainViewport
-		}}
+		use:focusable
 	>
 		{@render middle()}
 	</div>
@@ -213,10 +204,7 @@ the window, then enlarge it and retain the original widths of the layout.
 			class="right-sideview"
 			bind:this={rightDiv}
 			style:width={finalRightWidth + 'rem'}
-			use:focusable={{
-				id: DefinedFocusable.ViewportRight,
-				parentId: DefinedFocusable.MainViewport
-			}}
+			use:focusable
 		>
 			<Resizer
 				viewport={rightDiv}

@@ -6,6 +6,8 @@
 	import { BASE_BRANCH_SERVICE } from '$lib/baseBranch/baseBranchService.svelte';
 	import { SETTINGS_SERVICE } from '$lib/config/appSettingsV2';
 	import { ircEnabled } from '$lib/config/uiFeatureFlags';
+	import { DefinedFocusable } from '$lib/focus/focusManager';
+	import { focusable } from '$lib/focus/focusable.svelte';
 	import { IRC_SERVICE } from '$lib/irc/ircService.svelte';
 	import { PROJECTS_SERVICE } from '$lib/project/projectsService';
 	import { ircPath, projectPath, isWorkspacePath } from '$lib/routes/routes.svelte';
@@ -77,7 +79,12 @@
 	<IntegrateUpstreamModal bind:this={modal} {projectId} />
 {/if}
 
-<div class="chrome-header" class:mac={backend.platformName === 'macos'} data-tauri-drag-region>
+<div
+	class="chrome-header"
+	class:mac={backend.platformName === 'macos'}
+	data-tauri-drag-region
+	use:focusable
+>
 	<div class="chrome-left" data-tauri-drag-region>
 		<div class="chrome-left-buttons" class:macos={backend.platformName === 'macos'}>
 			<SyncButton {projectId} size="button" disabled={actionsDisabled} />

@@ -10,6 +10,8 @@
 	import { conflictEntryHint } from '$lib/conflictEntryPresence';
 	import { editPatch } from '$lib/editMode/editPatchUtils';
 	import { abbreviateFolders, changesToFileTree } from '$lib/files/filetreeV3';
+	import { DefinedFocusable } from '$lib/focus/focusManager';
+	import { focusable } from '$lib/focus/focusable.svelte';
 	import { type TreeChange, type Modification } from '$lib/hunks/change';
 	import { MODE_SERVICE } from '$lib/mode/modeService';
 	import { showToast } from '$lib/notifications/toasts';
@@ -29,7 +31,6 @@
 		listMode: 'list' | 'tree';
 		showCheckboxes?: boolean;
 		selectionId: SelectionId;
-		active?: boolean;
 		conflictEntries?: ConflictEntriesObj;
 		draggableFiles?: boolean;
 		ancestorMostConflictedCommitId?: string;
@@ -43,7 +44,6 @@
 		listMode,
 		selectionId,
 		showCheckboxes,
-		active,
 		stackId,
 		conflictEntries,
 		draggableFiles,
@@ -204,30 +204,48 @@
 
 {#snippet fileTemplate(change: TreeChange, idx: number, depth: number = 0)}
 	{@const isExecutable = (change.status.subject as Modification).flags}
+	{@const selected = idSelection.has(change.path, selectionId)}
 	<FileListItemWrapper
 		{selectionId}
 		{change}
 		{projectId}
 		{stackId}
-		{active}
+		{selected}
 		{listMode}
 		{depth}
+		active={selected}
 		hideBorder={hideLastFileBorder && idx === visibleFiles.length - 1}
 		draggable={draggableFiles}
 		executable={!!isExecutable}
 		showCheckbox={showCheckboxes}
-		selected={idSelection.has(change.path, selectionId)}
+		focusableOpts={{
+			id: DefinedFocusable.FileItem,
+			onKeydown: (e) => {
+				console.log('key down', e);
+				if (e.key === 'ArrowRight' || e.key === 'l') {
+					e.stopPropagation();
+					selectFilesInList(e, change, changes, idSelection, true, idx, selectionId);
+					onselect?.();
+					return true;
+				}
+			}
+		}}
 		onclick={(e) => {
 			e.stopPropagation();
 			selectFilesInList(e, change, changes, idSelection, true, idx, selectionId);
 			onselect?.();
 		}}
+		onkeydown={(e) => {
+			if (e.key === 'Enter') {
+				selectFilesInList(e, change, changes, idSelection, true, idx, selectionId);
+				onselect?.();
+			}
+		}}
 		{conflictEntries}
 	/>
 {/snippet}
 
-<!-- svelte-ignore a11y_no_static_element_interactions -->
-<div onkeydown={handleKeyDown}>
+<div class="file-list" use:focusable={{ list: true }}>
 	<!-- Conflicted changes -->
 	{#each Object.entries(unrepresentedConflictedEntries) as [path, kind]}
 		<FileListItem

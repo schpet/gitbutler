@@ -11,7 +11,7 @@
 	import SelectionView from '$components/SelectionView.svelte';
 	import WorktreeChanges from '$components/WorktreeChanges.svelte';
 	import { isParsedError } from '$lib/error/parser';
-	import { DefinedFocusable } from '$lib/focus/focusManager.svelte';
+	import { DefinedFocusable } from '$lib/focus/focusManager';
 	import { focusable } from '$lib/focus/focusable.svelte';
 	import { DIFF_SERVICE } from '$lib/hunks/diffService.svelte';
 	import {
@@ -324,7 +324,6 @@
 {/snippet}
 
 {#snippet commitChangedFiles(commitId: string)}
-	{@const active = activeSelectionId?.type === 'commit' && focusedStackId === stackId}
 	{@const changesResult = stackService.commitChanges(projectId, commitId)}
 	<ReduxResult {projectId} {stackId} result={changesResult.current}>
 		{#snippet children(changes, { projectId, stackId })}
@@ -350,7 +349,6 @@
 				stats={changes.stats}
 				conflictEntries={changes.conflictEntries}
 				{ancestorMostConflictedCommitId}
-				{active}
 				resizer={{
 					persistId: `changed-files-${stackId}`,
 					direction: 'down',
@@ -365,7 +363,6 @@
 {/snippet}
 
 {#snippet branchChangedFiles(branchName: string)}
-	{@const active = activeSelectionId?.type === 'branch' && focusedStackId === stackId}
 	{@const changesResult = stackService.branchChanges({
 		projectId,
 		stackId: stackId,
@@ -386,7 +383,6 @@
 				}}
 				changes={changes.changes}
 				stats={changes.stats}
-				{active}
 				resizer={{
 					persistId: `changed-files-${stackId}`,
 					direction: 'down',
@@ -394,7 +390,7 @@
 					maxHeight: 32,
 					defaultValue: 16
 				}}
-			></ChangedFiles>
+			/>
 		{/snippet}
 	</ReduxResult>
 {/snippet}
@@ -410,6 +406,7 @@
 	data-testid={TestId.Stack}
 	data-testid-stackid={stackId}
 	data-testid-stack={topBranch}
+	use:focusable
 	use:intersectionObserver={{
 		callback: (entry) => {
 			onVisible(!!entry?.isIntersecting);
@@ -418,10 +415,6 @@
 			threshold: 0.5,
 			root: lanesSrollableEl
 		}
-	}}
-	use:focusable={{
-		id: DefinedFocusable.Stack + ':' + stackId,
-		parentId: DefinedFocusable.ViewportMiddle
 	}}
 >
 	{#if !isCommitting}
@@ -457,7 +450,6 @@
 									{projectId}
 									{stackId}
 									mode="assigned"
-									active={focusedStackId === stackId}
 									dropzoneVisible={changes.current.length === 0 && !isCommitting}
 									onDropzoneActivated={(activated) => {
 										dropzoneActivated = activated;
@@ -545,6 +537,7 @@
 			bind:this={compactDiv}
 			data-details={stackId}
 			style:right="{DETAILS_RIGHT_PADDING_REM}rem"
+			use:focusable={{ list: true }}
 		>
 			<!-- TOP SECTION: Branch/Commit Details (no resizer) -->
 			{#if branchName && commitId}
@@ -638,7 +631,6 @@
 		position: relative;
 		flex-shrink: 0;
 		flex-direction: column;
-		height: 100%;
 		padding: 0 12px;
 
 		/* Use CSS custom properties for details view width to avoid ResizeObserver errors */

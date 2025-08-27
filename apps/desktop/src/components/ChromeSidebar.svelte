@@ -3,6 +3,8 @@
 	import KeyboardShortcutsModal from '$components/KeyboardShortcutsModal.svelte';
 	import ShareIssueModal from '$components/ShareIssueModal.svelte';
 	import { ircEnabled, codegenEnabled } from '$lib/config/uiFeatureFlags';
+	import { DefinedFocusable } from '$lib/focus/focusManager';
+	import { focusable } from '$lib/focus/focusable.svelte';
 	import {
 		branchesPath,
 		ircPath,
@@ -46,7 +48,7 @@
 	const userSettings = inject(SETTINGS);
 </script>
 
-<div class="sidebar">
+<div class="sidebar" use:focusable>
 	<div class="top">
 		<div>
 			{#if isWorkspacePath()}

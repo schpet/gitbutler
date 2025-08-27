@@ -5,7 +5,7 @@
 	import WorktreeTipsFooter from '$components/WorktreeTipsFooter.svelte';
 	import noChanges from '$lib/assets/illustrations/no-changes.svg?raw';
 	import { SETTINGS_SERVICE } from '$lib/config/appSettingsV2';
-	import { DefinedFocusable } from '$lib/focus/focusManager.svelte';
+	import { DefinedFocusable } from '$lib/focus/focusManager';
 	import { INTELLIGENT_SCROLLING_SERVICE } from '$lib/intelligentScrolling/service';
 	import { ID_SELECTION } from '$lib/selection/idSelection.svelte';
 	import { createWorktreeSelection } from '$lib/selection/key';
@@ -16,10 +16,10 @@
 
 	interface Props {
 		projectId: string;
-		focus: DefinedFocusable;
+		focus?: DefinedFocusable;
 	}
 
-	const { projectId, focus }: Props = $props();
+	const { projectId }: Props = $props();
 
 	const selectionId = createWorktreeSelection({ stackId: undefined });
 
@@ -90,9 +90,6 @@
 				title="Unassigned"
 				{projectId}
 				stackId={undefined}
-				active={selectionId.type === 'worktree' &&
-					selectionId.stackId === undefined &&
-					focus === DefinedFocusable.ViewportLeft}
 				onscrollexists={(exists: boolean) => {
 					isScrollable = exists;
 				}}

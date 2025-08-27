@@ -2,6 +2,8 @@
 	import CommitLine from '$components/CommitLine.svelte';
 	import CommitTitle from '$components/CommitTitle.svelte';
 	import { type CommitStatusType } from '$lib/commits/commit';
+	import { DefinedFocusable } from '$lib/focus/focusManager';
+	import { focusable } from '$lib/focus/focusable.svelte';
 	import { Avatar, Icon, TestId } from '@gitbutler/ui';
 
 	import { slide } from 'svelte/transition';
@@ -69,13 +71,13 @@
 		opacity,
 		borderTop,
 		isOpen,
-		active,
 		onclick,
 		menu,
 		hasConflicts,
 		...args
 	}: Props = $props();
 
+	const active = $derived(selected);
 	let container = $state<HTMLDivElement>();
 </script>
 
@@ -100,6 +102,7 @@
 			onclick?.();
 		}
 	}}
+	use:focusable
 >
 	{#if selected}
 		<div
@@ -150,6 +153,7 @@
 		position: relative;
 		width: 100%;
 		overflow: hidden;
+		outline: none;
 		transition: background-color var(--transition-fast);
 
 		&:hover,
