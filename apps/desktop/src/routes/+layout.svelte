@@ -32,6 +32,7 @@
 	import { inject } from '@gitbutler/core/context';
 	import { ChipToastContainer } from '@gitbutler/ui';
 	import { FOCUS_MANAGER } from '@gitbutler/ui/focus/focusManager';
+	import { getCurrentWindow } from '@tauri-apps/api/window';
 	import { type Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
 
@@ -73,6 +74,14 @@
 	// Keyboard shortcuts
 	const shortcutService = inject(SHORTCUT_SERVICE);
 	$effect(() => shortcutService.listen());
+
+	// Reset window title when not in a project
+	$effect(() => {
+		if (!projectId) {
+			const appWindow = getCurrentWindow();
+			appWindow.setTitle('GitButler');
+		}
+	});
 
 	// =============================================================================
 	// ANALYTICS & NAVIGATION

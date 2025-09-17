@@ -33,6 +33,7 @@
 	import { debounce } from '$lib/utils/debounce';
 	import { WORKTREE_SERVICE } from '$lib/worktree/worktreeService.svelte';
 	import { inject, provide } from '@gitbutler/core/context';
+	import { getCurrentWindow } from '@tauri-apps/api/window';
 	import { onDestroy, untrack, type Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
 
@@ -59,6 +60,7 @@
 	// Project data
 	const projectsResult = $derived(projectsService.projects());
 	const projects = $derived(projectsResult.current.data);
+	const currentProject = $derived(projects?.find((p) => p.id === projectId));
 
 	// =============================================================================
 	// REPOSITORY & BRANCH MANAGEMENT
@@ -170,6 +172,19 @@
 		return () => {
 			posthog.setPostHogRepo(undefined);
 		};
+	});
+
+	// =============================================================================
+	// WINDOW TITLE
+	// =============================================================================
+
+	$effect(() => {
+		const appWindow = getCurrentWindow();
+		if (currentProject?.title) {
+			appWindow.setTitle(`${currentProject.title} — GitButler`);
+		} else {
+			appWindow.setTitle('GitButler');
+		}
 	});
 
 	// =============================================================================
