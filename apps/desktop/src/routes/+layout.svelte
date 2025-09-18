@@ -86,9 +86,12 @@
 					try {
 						// Add the project
 						const result = await projectsService.addProject(path);
-						if (result && 'id' in result) {
+						if (result && (result.type === 'added' || result.type === 'alreadyExists')) {
+							const project = result.subject;
 							// Navigate to the newly added project
-							await goto(`/${result.id}`);
+							await goto(`/${project.id}`);
+						} else if (result) {
+							console.error('Failed to add project:', result.type);
 						}
 					} catch (err) {
 						console.error('Failed to open repository from command line:', err);
@@ -104,9 +107,12 @@
 					try {
 						// Add the project
 						const result = await projectsService.addProject(path);
-						if (result && 'id' in result) {
+						if (result && (result.type === 'added' || result.type === 'alreadyExists')) {
+							const project = result.subject;
 							// Open the project in a new window
-							await projectsService.openProjectInNewWindow(result.id);
+							await projectsService.openProjectInNewWindow(project.id);
+						} else if (result) {
+							console.error('Failed to add project:', result.type);
 						}
 					} catch (err) {
 						console.error('Failed to open repository in new window from command line:', err);
