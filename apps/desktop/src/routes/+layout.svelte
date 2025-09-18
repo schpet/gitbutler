@@ -84,14 +84,26 @@
 				if (path) {
 					console.log('Opening repository from command line:', path);
 					try {
-						// Add the project
-						const result = await projectsService.addProject(path);
-						if (result && (result.type === 'added' || result.type === 'alreadyExists')) {
-							const project = result.subject;
-							// Navigate to the newly added project
+						// First, try to find an existing project with this path
+						const allProjects = await projectsService.fetchProjects();
+						let project = allProjects.find(p => p.path === path);
+
+						if (!project) {
+							// Project doesn't exist, try to add it
+							console.log('Project not found, adding:', path);
+							const result = await projectsService.addProject(path);
+							if (result && (result.type === 'added' || result.type === 'alreadyExists')) {
+								project = result.subject;
+							} else if (result) {
+								console.error('Failed to add project:', result.type);
+								return;
+							}
+						}
+
+						if (project) {
+							// Navigate to the project
+							console.log('Navigating to project:', project.id);
 							await goto(`/${project.id}`);
-						} else if (result) {
-							console.error('Failed to add project:', result.type);
 						}
 					} catch (err) {
 						console.error('Failed to open repository from command line:', err);
@@ -105,14 +117,26 @@
 				if (path) {
 					console.log('Opening repository in new window from command line:', path);
 					try {
-						// Add the project
-						const result = await projectsService.addProject(path);
-						if (result && (result.type === 'added' || result.type === 'alreadyExists')) {
-							const project = result.subject;
+						// First, try to find an existing project with this path
+						const allProjects = await projectsService.fetchProjects();
+						let project = allProjects.find(p => p.path === path);
+
+						if (!project) {
+							// Project doesn't exist, try to add it
+							console.log('Project not found, adding:', path);
+							const result = await projectsService.addProject(path);
+							if (result && (result.type === 'added' || result.type === 'alreadyExists')) {
+								project = result.subject;
+							} else if (result) {
+								console.error('Failed to add project:', result.type);
+								return;
+							}
+						}
+
+						if (project) {
 							// Open the project in a new window
+							console.log('Opening project in new window:', project.id);
 							await projectsService.openProjectInNewWindow(project.id);
-						} else if (result) {
-							console.error('Failed to add project:', result.type);
 						}
 					} catch (err) {
 						console.error('Failed to open repository in new window from command line:', err);

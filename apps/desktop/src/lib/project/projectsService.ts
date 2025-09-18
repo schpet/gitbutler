@@ -41,6 +41,10 @@ export class ProjectsService {
 		return await this.api.endpoints.project.fetch({ projectId, noValidation });
 	}
 
+	async fetchProjects() {
+		return await this.api.endpoints.listProjects.fetch();
+	}
+
 	async setActiveProject(projectId: string): Promise<ProjectInfo | null> {
 		return await this.api.endpoints.setProjectActive.mutate({ id: projectId });
 	}
