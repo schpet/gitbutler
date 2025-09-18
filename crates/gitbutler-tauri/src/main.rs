@@ -86,6 +86,40 @@ fn main() {
 
                     let app_handle = tauri_app.handle();
 
+                    // Handle command-line arguments on initial app startup
+                    let args: Vec<String> = std::env::args().collect();
+                    if args.len() > 1 {
+                        for arg in args.iter().skip(1) {
+                            // Skip flags
+                            if !arg.starts_with('-') {
+                                let path = std::path::PathBuf::from(arg);
+                                // Check if it's an absolute path or resolve it relative to current directory
+                                let resolved_path = if path.is_absolute() {
+                                    path
+                                } else {
+                                    std::env::current_dir().unwrap_or_default().join(path)
+                                };
+
+                                // Check if the path exists, is a directory, and contains a git repository
+                                if resolved_path.exists() && resolved_path.is_dir() {
+                                    let git_dir = resolved_path.join(".git");
+                                    if git_dir.exists() {
+                                        // Emit an event to the frontend to open this repository after the app loads
+                                        let window_clone = window.clone();
+                                        let path_str = resolved_path.to_string_lossy().to_string();
+                                        tauri::async_runtime::spawn(async move {
+                                            // Small delay to ensure the frontend is ready
+                                            tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+                                            tracing::info!("Opening repository from initial launch argument: {:?}", path_str);
+                                            window_clone.emit("open-repository", path_str).ok();
+                                        });
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     logs::init(app_handle, performance_logging);
 
                     inherit_interactive_login_shell_environment_if_not_launched_from_terminal();
@@ -199,7 +233,44 @@ fn main() {
                 .plugin(tauri_plugin_shell::init())
                 .plugin(tauri_plugin_os::init())
                 .plugin(tauri_plugin_process::init())
-                .plugin(tauri_plugin_single_instance::init(|_, _, _| {}))
+                .plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
+                    // Handle command-line arguments for opening repositories when app is already running
+                    // The open command on macOS passes arguments after the --args flag
+
+                    // Check if there's a path argument (usually the first non-flag argument)
+                    for arg in args.iter() {
+                        // Skip flags and the app name itself
+                        if !arg.starts_with('-') && arg != &app.package_info().name {
+                            // Try to resolve the path relative to the working directory
+                            let path = if std::path::Path::new(arg).is_absolute() {
+                                std::path::PathBuf::from(arg)
+                            } else {
+                                std::path::PathBuf::from(&cwd).join(arg)
+                            };
+
+                            // Check if the path exists and is a directory
+                            if path.exists() && path.is_dir() {
+                                // Check if it's a git repository by looking for .git directory
+                                let git_dir = path.join(".git");
+                                if git_dir.exists() {
+                                    tracing::info!("Opening repository from command line (existing instance): {:?}", path);
+
+                                    // Emit event to open repository in a new window
+                                    if let Some(window) = app.get_webview_window("main") {
+                                        window.emit("open-repository-new-window", path.to_string_lossy().to_string()).ok();
+                                    }
+                                    // Only handle the first valid repository path
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    // Focus an existing window if no repository path was provided
+                    if let Some(window) = app.get_webview_window("main") {
+                        window.set_focus().ok();
+                    }
+                }))
                 .plugin(tauri_plugin_updater::Builder::new().build())
                 .plugin(tauri_plugin_dialog::init())
                 .plugin(tauri_plugin_fs::init())

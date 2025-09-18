@@ -2,6 +2,7 @@
 	import '../styles/styles.css';
 	import { browser, dev } from '$app/environment';
 	import { afterNavigate, beforeNavigate } from '$app/navigation';
+	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import AppUpdater from '$components/AppUpdater.svelte';
 	import FocusCursor from '$components/FocusCursor.svelte';
@@ -73,6 +74,52 @@
 	// Keyboard shortcuts
 	const shortcutService = inject(SHORTCUT_SERVICE);
 	$effect(() => shortcutService.listen());
+
+	// Handle command-line argument repository opening
+	$effect(() => {
+		if (browser && backend) {
+			// Handle opening repository in the same window
+			const unlistenSameWindow = backend.listen('open-repository', async (event) => {
+				const path = event.payload as string;
+				if (path) {
+					console.log('Opening repository from command line:', path);
+					try {
+						// Add the project
+						const result = await projectsService.addProject(path);
+						if (result && 'id' in result) {
+							// Navigate to the newly added project
+							await goto(`/${result.id}`);
+						}
+					} catch (err) {
+						console.error('Failed to open repository from command line:', err);
+					}
+				}
+			});
+
+			// Handle opening repository in a new window
+			const unlistenNewWindow = backend.listen('open-repository-new-window', async (event) => {
+				const path = event.payload as string;
+				if (path) {
+					console.log('Opening repository in new window from command line:', path);
+					try {
+						// Add the project
+						const result = await projectsService.addProject(path);
+						if (result && 'id' in result) {
+							// Open the project in a new window
+							await projectsService.openProjectInNewWindow(result.id);
+						}
+					} catch (err) {
+						console.error('Failed to open repository in new window from command line:', err);
+					}
+				}
+			});
+
+			return () => {
+				unlistenSameWindow.then((fn) => fn());
+				unlistenNewWindow.then((fn) => fn());
+			};
+		}
+	});
 
 	// =============================================================================
 	// ANALYTICS & NAVIGATION
