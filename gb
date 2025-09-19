@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# GitButler CLI wrapper
+# Usage: gb [path]
+# This script properly handles opening GitButler with a repository path
+
+REPO_PATH="${1:-.}"
+
+# Resolve to absolute path
+if [[ "$REPO_PATH" != /* ]]; then
+    REPO_PATH="$(cd "$REPO_PATH" && pwd)"
+fi
+
+# Check if it's a git repository
+if [ ! -d "$REPO_PATH/.git" ]; then
+    echo "Error: $REPO_PATH is not a git repository"
+    exit 1
+fi
+
+echo "Opening repository: $REPO_PATH"
+
+# Path to the GitButler binary
+GITBUTLER_BINARY="/Applications/GitButler.app/Contents/MacOS/GitButler"
+
+# For development, use this instead:
+# GITBUTLER_BINARY="/Users/schpet/code/gitbutler/target/release/gitbutler-tauri"
+
+# Check if GitButler is already running
+if pgrep -x "GitButler" > /dev/null || pgrep -x "gitbutler-tauri" > /dev/null; then
+    echo "GitButler is already running, opening in new window..."
+    # Run the binary directly with the path - this WILL trigger single_instance
+    "$GITBUTLER_BINARY" "$REPO_PATH" &
+else
+    echo "Starting GitButler..."
+    # Start fresh
+    "$GITBUTLER_BINARY" "$REPO_PATH" &
+fi

@@ -229,10 +229,6 @@ fn main() {
 
                     Ok(())
                 })
-                .plugin(tauri_plugin_http::init())
-                .plugin(tauri_plugin_shell::init())
-                .plugin(tauri_plugin_os::init())
-                .plugin(tauri_plugin_process::init())
                 .plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
                     // Handle command-line arguments for opening repositories when app is already running
                     // The open command on macOS passes arguments after the --args flag
@@ -292,6 +288,10 @@ fn main() {
                         }
                     }
                 }))
+                .plugin(tauri_plugin_http::init())
+                .plugin(tauri_plugin_shell::init())
+                .plugin(tauri_plugin_os::init())
+                .plugin(tauri_plugin_process::init())
                 .plugin(tauri_plugin_updater::Builder::new().build())
                 .plugin(tauri_plugin_dialog::init())
                 .plugin(tauri_plugin_fs::init())

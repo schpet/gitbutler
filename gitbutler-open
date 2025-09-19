@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# GitButler CLI opener script
+# Usage: gitbutler-open [path]
+# This script handles opening GitButler with a repository path
+
+REPO_PATH="${1:-.}"
+
+# Resolve to absolute path
+if [[ "$REPO_PATH" != /* ]]; then
+    REPO_PATH="$(cd "$REPO_PATH" && pwd)"
+fi
+
+# Check if it's a git repository
+if [ ! -d "$REPO_PATH/.git" ]; then
+    echo "Error: $REPO_PATH is not a git repository"
+    exit 1
+fi
+
+echo "Opening repository: $REPO_PATH"
+
+# Check if GitButler is already running
+if pgrep -x "GitButler" > /dev/null || pgrep -x "gitbutler-tauri" > /dev/null; then
+    echo "GitButler is already running, sending path via temporary file..."
+
+    # Create a temporary file with the path
+    TEMP_FILE="/tmp/gitbutler-open-$(date +%s).path"
+    echo "$REPO_PATH" > "$TEMP_FILE"
+
+    # Use AppleScript to activate GitButler and trigger file open
+    osascript <<EOF
+tell application "GitButler"
+    activate
+    open POSIX file "$TEMP_FILE"
+end tell
+EOF
+
+    # Clean up temp file after a delay
+    (sleep 2 && rm -f "$TEMP_FILE") &
+else
+    echo "Starting GitButler with repository..."
+    # Start GitButler with the repository path
+    open -a '/Applications/GitButler.app' --args "$REPO_PATH"
+fi
