@@ -238,6 +238,7 @@ fn main() {
                     // The open command on macOS passes arguments after the --args flag
 
                     // Check if there's a path argument (usually the first non-flag argument)
+                    let mut handled = false;
                     for arg in args.iter() {
                         // Skip flags and the app name itself
                         if !arg.starts_with('-') && arg != &app.package_info().name {
@@ -255,10 +256,26 @@ fn main() {
                                 if git_dir.exists() {
                                     tracing::info!("Opening repository from command line (existing instance): {:?}", path);
 
-                                    // Emit event to open repository in a new window
-                                    if let Some(window) = app.get_webview_window("main") {
-                                        window.emit("open-repository-new-window", path.to_string_lossy().to_string()).ok();
+                                    // Emit to all windows - they will decide what to do
+                                    let path_str = path.to_string_lossy().to_string();
+                                    tracing::info!("Emitting open-repository event for path: {}", path_str);
+
+                                    // Use app.emit to broadcast to all windows
+                                    let emit_result = app.emit("open-repository-new-window", &path_str);
+                                    if let Err(e) = emit_result {
+                                        tracing::error!("Failed to emit event: {:?}", e);
+                                    } else {
+                                        tracing::info!("Successfully emitted open-repository-new-window event to all windows");
                                     }
+
+                                    // Focus the first window
+                                    let windows = app.webview_windows();
+                                    if !windows.is_empty() {
+                                        let (_, window) = windows.iter().next().unwrap();
+                                        window.set_focus().ok();
+                                    }
+                                    handled = true;
+
                                     // Only handle the first valid repository path
                                     break;
                                 }
@@ -266,9 +283,13 @@ fn main() {
                         }
                     }
 
-                    // Focus an existing window if no repository path was provided
-                    if let Some(window) = app.get_webview_window("main") {
-                        window.set_focus().ok();
+                    // If no repository was provided, just focus the first window
+                    if !handled {
+                        let windows = app.webview_windows();
+                        if !windows.is_empty() {
+                            let (_, window) = windows.iter().next().unwrap();
+                            window.set_focus().ok();
+                        }
                     }
                 }))
                 .plugin(tauri_plugin_updater::Builder::new().build())

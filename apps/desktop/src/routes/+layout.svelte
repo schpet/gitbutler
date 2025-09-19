@@ -78,9 +78,12 @@
 	// Handle command-line argument repository opening
 	$effect(() => {
 		if (browser && backend) {
+			console.log('Setting up command-line repository listeners');
+
 			// Handle opening repository in the same window
 			const unlistenSameWindow = backend.listen('open-repository', async (event) => {
 				const path = event.payload as string;
+				console.log('Received open-repository event with path:', path);
 				if (path) {
 					console.log('Opening repository from command line:', path);
 					try {
@@ -111,11 +114,12 @@
 				}
 			});
 
-			// Handle opening repository in a new window
+			// Handle opening repository in a new window (when app is already running)
 			const unlistenNewWindow = backend.listen('open-repository-new-window', async (event) => {
 				const path = event.payload as string;
+				console.log('Received open-repository-new-window event with path:', path);
 				if (path) {
-					console.log('Opening repository in new window from command line:', path);
+					console.log('Opening repository from subsequent call:', path);
 					try {
 						// First, try to find an existing project with this path
 						const allProjects = await projectsService.fetchProjects();
@@ -134,12 +138,27 @@
 						}
 
 						if (project) {
-							// Open the project in a new window
-							console.log('Opening project in new window:', project.id);
-							await projectsService.openProjectInNewWindow(project.id);
+							// Check if this project is already open in the current window
+							const currentProjectId = page.params.projectId;
+
+							if (project.id === currentProjectId) {
+								// Project is already open in this window, just focus it
+								console.log('Project already open in current window, focusing');
+								// Window is already focused by the backend
+							} else if (project.is_open) {
+								// Project is open in another window, we should focus that window
+								// But we can't directly focus another window from here
+								// The best we can do is open it in a new window
+								console.log('Project is open in another window, opening in new window');
+								await projectsService.openProjectInNewWindow(project.id);
+							} else {
+								// Project is not currently open anywhere, open in new window
+								console.log('Opening project in new window:', project.id);
+								await projectsService.openProjectInNewWindow(project.id);
+							}
 						}
 					} catch (err) {
-						console.error('Failed to open repository in new window from command line:', err);
+						console.error('Failed to open repository from command line:', err);
 					}
 				}
 			});
